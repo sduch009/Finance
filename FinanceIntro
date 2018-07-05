@@ -1,0 +1,49 @@
+#Finance and Python Syntax
+#Suppose we have the following numerical parameter values for the valuation:
+
+#Initial stock index level S0 = 100
+#Strike price of th eEuropean call option K = 105
+#Time-to-maturity T = 1 year
+#Constant, riskless short rate r = 5%
+#Constant volatility sigma = 20%
+
+#In the Black-Scholes-Merton (BSM) model, the index level at maturity is a random
+#variable, given by Equation 1-1 with z being a standard normally distributed random variable:
+
+#Equation 1-1. BSM (1973) index level at maturity
+
+#St = S0exp((r-(1/2)sigma^2)T + sigmaT[(1/2)]z)
+
+#The following is an algorithmic description of the Monte Carlo valuation procedure:
+
+#1. Draw I (pseudo) random numbers z(i), i = {1, 2, ...,I} from the standard normal distribution
+#2. Calculate all resulting index levels at maturity St(i) for given z(i) and Equation 1-1.
+#3. Calculate all inner values of the option at maturity as ht(i) = max(St(i) - K,0)
+#4. Estimate the option present value via the Monte Carlo estimator given in equation 1-2
+
+#Equation 1-2. Monte Carlo estimator for European option:
+
+#C0 ~= e^(-rT)(1/I)(sum of all hT(i) over I)
+
+#We are now going to translate this problem and algorithm into Python code:
+
+#First, lets start with the parameter values:
+S0 = 100
+K = 105
+T = 1.0
+r = 0.05
+sigma = 0.2
+
+#Next, the valuation algorithm,  Here we will for the furst time use NumPy, which makes life quite esy for our second task:
+import numpy as np
+#from numpy import *
+
+I = 100000 # Number of simulations
+
+z = np.random.standard_normal(I)
+ST = S0 * np.exp((r - 0.5 * sigma ** 2) * T + sigma * np.sqrt(T) * z)
+hT = np.maximum(ST - K, 0)
+C0 = np.exp(-r * T) * np.sum(hT) / I
+
+#Third, we print the result:
+print("Value of the European Call option %5.3f" % C0)
