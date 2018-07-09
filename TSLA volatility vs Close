@@ -1,0 +1,64 @@
+
+#Consider a finance student writing master's thesis and interested in Tesla stock prices.
+#Wanting to analyze historical stock price information for, say, five years to see how the
+#volatility of the stock price has fluctuated over time.  
+#Wanting to find evidence that volatility, in contrast to some typical model assumptions,
+#fluctuates over time and is far from being constant.  
+#The results should also be visualized.
+
+#The student would need to do the following:
+# 1- Download Google stock price data from the Web
+# 2- Calculate the rolling standard deviation of the log returns (volatility)
+# 3- Plot the stock price data and the results.
+
+# These tasks are complex enough that not too long ago one would have considered them to be
+# something for professional financial analysts.  Today, even the finance student can easily
+# cope with such problems.  Let us see how exactly this works -- without worrying about
+# syntax details at this stage.
+
+#First, make sure to have available all necessary libraries:
+
+
+import numpy as np
+#import pandas.io.data as web
+###"The pandas.io.data module is moved to a separate package "
+import datetime as dt
+import matplotlib.pyplot as plt
+from matplotlib import style
+import pandas as pd
+import pandas_datareader.data as web
+###ImportError: The pandas.io.data module is moved to a separate package (pandas-datareader).
+### After installing the pandas-datareader package (https://github.com/pydata/pandas-datareader),
+### you can change the import ``from pandas.io import data, wb`` to ``from pandas_datareader import data, wb``.
+#import pandas_datareader as wb
+style.use('ggplot')
+
+start = dt.datetime(2015, 1, 1)
+end = dt.datetime.now()
+
+#Second, retrieve the data from, say, Google itself:
+#doesnt work, using morningstar
+df = web.DataReader("TSLA", 'morningstar', start, end)
+df.reset_index(inplace=True)
+df.set_index("Date", inplace=True)
+df = df.drop("Symbol", axis=1)
+
+print(df.head())
+
+##Third step, implement the nexessary analytics for volatilities:
+df['Log_Ret'] = np.log(df['Close'] / df['Close'].shift(1))
+df['Volatility'] = pd.rolling_std(df['Log_Ret'], window=100) * np.sqrt(100)
+
+# FutureWarning: pd.rolling_std is deprecated for Series and will be removed in a future version, replace with 
+#Series.rolling(window=252,center=False).std()
+
+df['Volatility'].plot(subplots=True, color='blue',figsize=(10, 8))
+df['Close'].plot(subplots=True, color='blue',figsize=(10, 8))
+
+ax1 = plt.subplot2grid((6,1), (0,0), rowspan=5, colspan=1)
+ax2 = plt.subplot2grid((6,1), (5,0), rowspan=1, colspan=1,sharex=ax1)
+
+ax1.plot(df.index, df['Volatility'])
+ax2.bar(df.index, df['Close'])
+
+plt.show()
